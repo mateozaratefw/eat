@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { getOrderById } from "@/app/actions/orders";
 
 interface OrderInfo {
   order_id: string;
@@ -23,16 +24,37 @@ export default function OrdersList() {
   const [orders, setOrders] = useState<OrderInfo[]>([]);
 
   useEffect(() => {
-    const storedOrders = localStorage.getItem("orders");
-    if (storedOrders) {
-      const parsedOrders = JSON.parse(storedOrders);
-      // Sort orders by created_at in descending order (newest first)
-      const sortedOrders = parsedOrders.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      setOrders(sortedOrders);
-    }
+    const fetchOrders = async () => {
+      const storedOrderIds = localStorage.getItem("orders");
+      if (storedOrderIds) {
+        const orderIds = JSON.parse(storedOrderIds);
+        try {
+          const orderPromises = orderIds.map(async (storedOrder: any) => {
+            const orderDetails = await getOrderById(storedOrder.order_id);
+            return {
+              ...orderDetails,
+              _items: storedOrder._items || [], // Use _items from localStorage
+              _total:
+                storedOrder._items?.reduce(
+                  (acc: number, item: any) => acc + item.price * item.quantity,
+                  0
+                ) || 0,
+            };
+          });
+          const fetchedOrders = await Promise.all(orderPromises);
+          const sortedOrders = fetchedOrders.sort(
+            (a: OrderInfo, b: OrderInfo) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          );
+          setOrders(sortedOrders);
+        } catch (error) {
+          console.error("Failed to fetch orders:", error);
+        }
+      }
+    };
+
+    fetchOrders();
   }, []);
 
   if (orders.length === 0) {
@@ -80,30 +102,34 @@ export default function OrdersList() {
               <div>
                 <h4 className="font-medium mb-2">Productos:</h4>
                 <div className="space-y-2">
-                  {order._items.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 text-sm"
-                    >
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
-                        <Image
-                          src={item.image || "/placeholder.svg"}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
+                  {order._items.map((item, index) => {
+                    console.log(item);
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 text-sm"
+                      >
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
+                          <Image
+                            src={item.image || "/placeholder.svg"}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-muted-foreground">
+                            x{item.quantity}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          $
+                          {(item.price * item.quantity).toLocaleString("es-AR")}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-muted-foreground">
-                          x{item.quantity}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        ${(item.price * item.quantity).toLocaleString("es-AR")}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               <div className="pt-4 border-t">

@@ -90,4 +90,29 @@ export async function createOrder(
   }
 
   return { success: true };
+}
+
+interface OrderInfo {
+  order_id: string;
+  status: string;
+  created_at: string;
+  links_count: number;
+  tracking_id: string | null;
+  payment_status: string;
+  payee_name: string;
+  retry_count: number;
+  expiration_time: string;
+  _items: any[];
+  _total: number;
+}
+
+export async function getOrderById(orderId: string): Promise<OrderInfo> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.json();
 } 
