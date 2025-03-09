@@ -79,10 +79,15 @@ export default function OrdersList() {
               <div className="flex gap-2">
                 <Badge
                   variant={
-                    order.status === "In progress" ? "secondary" : "default"
+                    order.status === "payment_pending" ? "secondary" : "default"
+                  }
+                  className={
+                    order.status === "processing"
+                      ? "bg-green-500 hover:bg-green-600"
+                      : ""
                   }
                 >
-                  {order.status}
+                  {order.status.replace("_", " ").charAt(0).toUpperCase() + order.status.replace("_", " ").slice(1)}
                 </Badge>
               </div>
             </div>
