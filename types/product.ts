@@ -78,6 +78,11 @@ export interface Product {
 }
 
 export interface CartItem extends Product {
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+  customMetadata: any | null;
+  restaurantId: string;
   quantity: number;
 }
 

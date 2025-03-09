@@ -17,10 +17,18 @@ import type {
   SearchResponse,
   StoreProductsResponse,
 } from "@/types/product";
+import { useCart } from "@/context/cart-context";
 
 export default function SearchResults() {
   const params = useParams();
   const query = params.query as string;
+  const {
+    addToCart,
+    removeFromCart,
+    isInCart,
+    getCartItemQuantity,
+    updateQuantity,
+  } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +62,8 @@ export default function SearchResults() {
           throw new Error("Error al buscar productos");
         }
 
-        const data: SearchResponse = await response.json();
-        setProducts(data.products);
+        const data: Product[] = await response.json();
+        setProducts(data);
         setViewingStore(false);
         setStoreUrl(null);
         setSelectedProductId(null);
@@ -110,7 +118,6 @@ export default function SearchResults() {
 
   const handleProductSelect = async (productId: string) => {
     try {
-      // If clicking the same product, toggle selection off
       if (selectedProductId === productId) {
         setSelectedProductId(null);
         setViewingStore(false);
@@ -120,14 +127,17 @@ export default function SearchResults() {
         return;
       }
 
-      // Set selected product ID immediately for UI feedback
       setSelectedProductId(productId);
       setError(null);
 
-      // Get the selected product to extract store URL
       const selectedProduct = products.find((p) => p.id === productId);
       if (!selectedProduct || !selectedProduct.restaurant?.url) {
         throw new Error("No se pudo obtener la URL de la tienda");
+      }
+
+      // Add the selected product to cart if it's not already there
+      if (!isInCart(productId) && selectedProduct.isAvailable) {
+        addToCart(selectedProduct, 1);
       }
 
       const storeUrl = selectedProduct.restaurant.url;
@@ -136,13 +146,11 @@ export default function SearchResults() {
       setStoreName(storeName);
       setViewingStore(true);
 
-      // Scroll to top with smooth animation
       window.scrollTo({
         top: 0,
         behavior: "smooth",
       });
 
-      // Fetch other products from the same store
       await fetchStoreProducts(storeUrl);
     } catch (err) {
       setError(
@@ -174,11 +182,6 @@ export default function SearchResults() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:py-8 px-4 pb-24">
       <div className="">
-        <h1 className="text-3xl font-bold text-center mb-6">
-          {viewingStore && storeName
-            ? `Productos de ${storeName}`
-            : `Resultados para: ${decodeURIComponent(query)}`}
-        </h1>
         {viewingStore && (
           <Breadcrumb className="mb-4">
             <BreadcrumbList>
@@ -194,10 +197,15 @@ export default function SearchResults() {
             </BreadcrumbList>
           </Breadcrumb>
         )}
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-4 md:mb-6">
           <SearchBar />
         </div>
 
+        <h1 className="text-xl font-bold text-start md:mb-6">
+          {viewingStore && storeName
+            ? `Productos de ${storeName}`
+            : `Resultados para: ${decodeURIComponent(query)}`}
+        </h1>
         {loading && (
           <div className="text-center py-8">
             <p>Cargando resultados...</p>
@@ -233,6 +241,21 @@ export default function SearchResults() {
                     isSelected={true}
                     onSelect={() => handleProductSelect(selectedProduct.id)}
                   />
+                  {isInCart(selectedProduct.id) && (
+                    <div className="mt-2 flex justify-center">
+                      <div className="flex items-center space-x-2 bg-primary/10 p-2 rounded-md">
+                        <span className="text-sm font-medium">
+                          En carrito: {getCartItemQuantity(selectedProduct.id)}
+                        </span>
+                        <button
+                          className="text-sm text-primary hover:text-primary/80"
+                          onClick={() => removeFromCart(selectedProduct.id)}
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -300,6 +323,8 @@ export default function SearchResults() {
                     ? "opacity-40 scale-95"
                     : product.id === selectedProductId
                     ? "ring-4 ring-primary shadow-lg scale-100 z-10"
+                    : isInCart(product.id)
+                    ? "ring-2 ring-primary scale-100"
                     : "scale-100"
                 }`}
               >

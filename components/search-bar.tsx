@@ -21,7 +21,7 @@ export function SearchBar() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative w-full max-w-2xl mx-auto mb-8"
+      className="relative w-full max-w-2xl mx-auto"
     >
       <Input
         type="text"

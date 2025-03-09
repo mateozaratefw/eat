@@ -8,10 +8,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
   const router = useRouter();
+  const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const totalAmount = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -24,11 +29,47 @@ export default function CartPage() {
     return total;
   }, 0);
 
-  const handleCheckout = () => {
-    // Simulate checkout process
-    alert("¡Gracias por tu compra! Tu pedido ha sido procesado.");
-    clearCart();
-    router.push("/");
+  const handleCheckout = async () => {
+    if (!name.trim()) {
+      alert("Por favor ingresa tu nombre");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const orderId = uuidv4();
+
+      console.log(JSON.stringify(cartItems, null, 2));
+
+      const links = cartItems.flatMap((item) =>
+        Array(item.quantity).fill(item.url)
+      );
+      const response = await fetch("http://181.98.138.90:8000/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          links,
+          payee_name: name,
+        }),
+      });
+
+      console.log(JSON.stringify(response, null, 2));
+      if (!response.ok) {
+        throw new Error("Error al procesar la orden");
+      }
+
+      // router.push("/");
+    } catch (error) {
+      console.error("Error:", error);
+      alert(
+        "Hubo un error al procesar tu orden. Por favor intenta nuevamente."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -181,13 +222,27 @@ export default function CartPage() {
                   </span>
                 </div>
               </div>
-              <Button
-                className="w-full mt-6"
-                size="lg"
-                onClick={handleCheckout}
-              >
-                Finalizar compra
-              </Button>
+              <div className="mt-6 space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Nombre
+                  </label>
+                  <Input
+                    id="name"
+                    placeholder="Ingresa tu nombre"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={handleCheckout}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Procesando..." : "Finalizar compra"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
