@@ -1,6 +1,6 @@
 'use server';
 
-import { CartItem } from "@/types/cart";
+import { CartItem } from "@/app/types/cart";
 
 export async function createOrder(
   orderId: string,
@@ -30,5 +30,5 @@ export async function createOrder(
     throw new Error("Error al procesar la orden");
   }
 
-  return response;
+  return { success: true };
 } 
