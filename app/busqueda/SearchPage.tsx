@@ -30,7 +30,8 @@ export default function SearchPage({
     initialProducts.filter(
       (product) =>
         product.image !==
-        "https://images.rappi.com.ar/products/?d=300x300&e=webp&q=1"
+          "https://images.rappi.com.ar/products/?d=300x300&e=webp&q=1" &&
+        product.isAvailable
     )
   );
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
@@ -57,7 +58,7 @@ export default function SearchPage({
           },
           body: JSON.stringify({
             store_url: storeUrl,
-            limit: 100
+            limit: 100,
           }),
         }
       );

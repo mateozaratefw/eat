@@ -47,11 +47,11 @@ export default function CartPage() {
 
       const orderInfo = {
         order_id: orderId,
-        status: "In progress",
+        status: "Waiting for payment",
         created_at: new Date().toISOString(),
         links_count: cartItems.length,
         tracking_id: null,
-        payment_status: "In progress",
+        payment_status: "Waiting for payment",
         payee_name: name,
         retry_count: 0,
         expiration_time: new Date(
@@ -67,7 +67,7 @@ export default function CartPage() {
       localStorage.setItem("orders", JSON.stringify(existingOrders));
 
       clearCart(); // Clear the cart after successful order
-      router.push("/");
+      router.push("/?success=true");
     } catch (error) {
       console.error("Error:", error);
       alert(

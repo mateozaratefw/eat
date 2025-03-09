@@ -55,7 +55,13 @@ export default function OrdersList() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Badge variant={"default"}>{order.status}</Badge>
+                <Badge
+                  variant={
+                    order.status === "In progress" ? "secondary" : "default"
+                  }
+                >
+                  {order.status}
+                </Badge>
               </div>
             </div>
 

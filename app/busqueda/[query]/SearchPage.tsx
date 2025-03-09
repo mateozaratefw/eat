@@ -100,7 +100,6 @@ export default function SearchResults({
         throw new Error("No se pudo obtener la URL de la tienda");
       }
 
-      // Add the selected product to cart if it's not already there
       if (!isInCart(productId) && selectedProduct.isAvailable) {
         addToCart(selectedProduct, 1);
       }
