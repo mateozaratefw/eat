@@ -21,7 +21,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { getPendingPaymentOrders, type Order } from "@/app/actions/orders";
+import {
+  getPendingPaymentOrders,
+  type Order,
+  type PaymentConfirmation,
+  confirmOrderPayment,
+} from "@/app/actions/orders";
 
 const updateOrderStatus = (orderId: string, newStatus: string) => {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
@@ -54,12 +59,6 @@ const getOrderFromLocalStorage = (orderId: string): Order | null => {
 const getAllOrdersFromLocalStorage = (): Order[] => {
   return JSON.parse(localStorage.getItem("orders") || "[]");
 };
-
-interface PaymentConfirmation {
-  amount: number;
-  status: string;
-  payer_name: string;
-}
 
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -135,21 +134,7 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders/${selectedOrderId}/confirm-payment`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": "sk_admin_key987654",
-          },
-          body: JSON.stringify(paymentDetails),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to confirm payment");
-      }
+      await confirmOrderPayment(selectedOrderId, paymentDetails);
 
       const updatedOrder = {
         ...currentOrder,

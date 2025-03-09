@@ -19,6 +19,35 @@ export interface OrdersResponse {
   count: number;
 }
 
+export interface PaymentConfirmation {
+  amount: number;
+  status: string;
+  payer_name: string;
+}
+
+export async function confirmOrderPayment(
+  orderId: string,
+  paymentDetails: PaymentConfirmation
+): Promise<{ success: boolean }> {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/confirm-payment`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": "sk_admin_key987654",
+      },
+      body: JSON.stringify(paymentDetails),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to confirm payment");
+  }
+
+  return { success: true };
+}
+
 export async function getPendingPaymentOrders(): Promise<OrdersResponse> {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/orders/pending-payment`,
