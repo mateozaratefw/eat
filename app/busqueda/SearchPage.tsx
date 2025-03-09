@@ -57,6 +57,7 @@ export default function SearchPage({
           },
           body: JSON.stringify({
             store_url: storeUrl,
+            limit: 100
           }),
         }
       );
@@ -69,7 +70,6 @@ export default function SearchPage({
       const filteredStoreProducts = data.products.filter(
         (p) => p.id !== selectedProductId
       );
-      console.log("filteredStoreProducts", JSON.stringify(filteredStoreProducts, null, 4));
       setStoreProducts(filteredStoreProducts);
     } catch (err) {
       setStoreError(
