@@ -44,24 +44,23 @@ export default function CartPage() {
       const links = cartItems.flatMap((item) =>
         Array(item.quantity).fill(item.url)
       );
-      const response = await fetch("http://181.98.138.90:8000/orders", {
+      const response = await fetch("http://172.20.5.3:8000/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           order_id: orderId,
-          links,
+          links: links,
           payee_name: name,
         }),
       });
 
-      console.log(JSON.stringify(response, null, 2));
       if (!response.ok) {
         throw new Error("Error al procesar la orden");
       }
 
-      // router.push("/");
+      router.push("/");
     } catch (error) {
       console.error("Error:", error);
       alert(

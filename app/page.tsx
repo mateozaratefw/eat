@@ -11,8 +11,8 @@ export default function Home() {
   const query = searchParams.get("query") || "";
 
   return (
-    <main className="flex min-h-screen flex-col items-center py-8 px-4 pb-24">
-      <div className="container max-w-7xl">
+    <main className="flex min-h-screen flex-col items-center justify-center py-8 px-4 pb-24">
+      <div className="max-w-7xl flex items-center justify-center w-full">
         <SearchBar />
       </div>
       <CartSummary />
