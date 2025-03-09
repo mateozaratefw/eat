@@ -30,6 +30,9 @@ export default function CartPage() {
     return total;
   }, 0);
 
+  const subtotalWithDelivery = totalAmount + totalDeliveryFee;
+  const serviceCharge = subtotalWithDelivery * 0.05; // 5% service charge
+
   const handleCheckout = async () => {
     if (!name.trim()) {
       alert("Por favor ingresa tu nombre");
@@ -55,7 +58,7 @@ export default function CartPage() {
           Date.now() + 24 * 60 * 60 * 1000
         ).toISOString(), // 24 hours from now
         _items: cartItems,
-        _total: totalAmount + totalDeliveryFee,
+        _total: subtotalWithDelivery + serviceCharge,
       };
 
       // Get existing orders or initialize empty array
@@ -218,10 +221,17 @@ export default function CartPage() {
                       : "Gratis"}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span>Cargo por servicio (5%)</span>
+                  <span>${serviceCharge.toLocaleString("es-AR")}</span>
+                </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total</span>
                   <span>
-                    ${(totalAmount + totalDeliveryFee).toLocaleString("es-AR")}
+                    $
+                    {(subtotalWithDelivery + serviceCharge).toLocaleString(
+                      "es-AR"
+                    )}
                   </span>
                 </div>
               </div>
@@ -229,7 +239,9 @@ export default function CartPage() {
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <h4 className="font-semibold text-blue-900 mb-2 text-lg">
                     💳 Instrucciones de Pago - Total: $
-                    {(totalAmount + totalDeliveryFee).toLocaleString("es-AR")}
+                    {(subtotalWithDelivery + serviceCharge).toLocaleString(
+                      "es-AR"
+                    )}
                   </h4>
                   <div className="space-y-3">
                     <p className="text-blue-800">
