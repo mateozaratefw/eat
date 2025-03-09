@@ -14,7 +14,7 @@ export function SearchBar() {
   const exampleQueries = [
     "quiero almorzar algo liviano por menos de 10.000",
     "hamburguesa bien gede bien pesada",
-    "quiero comer algo con proteina, soy vegetariano",
+    "quiero algo con arroz y carne",
     "me quiero reventar con bajon dulce",
     "algo con carne pero sin gluten",
   ];
@@ -55,7 +55,7 @@ export function SearchBar() {
           <button
             key={example}
             onClick={() => handleExampleClick(example)}
-            className="text-sm px-3 py-1 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-700 transition-colors"
+            className="text-sm px-3 py-1 rounded-full bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
           >
             {example}
           </button>
