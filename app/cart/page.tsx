@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { createOrder } from "@/app/actions/orders";
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -39,35 +40,13 @@ export default function CartPage() {
     try {
       const orderId = uuidv4();
 
-
-      const links = cartItems.flatMap((item) =>
-        Array(item.quantity).fill(item.url)
-      );
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            order_id: orderId,
-            links: links,
-            payee_name: name,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Error al procesar la orden");
-      }
+      await createOrder(orderId, name, cartItems);
 
       const orderInfo = {
         order_id: orderId,
         status: "In progress",
         created_at: new Date().toISOString(),
-        links_count: links.length,
+        links_count: cartItems.length,
         tracking_id: null,
         payment_status: "In progress",
         payee_name: name,
