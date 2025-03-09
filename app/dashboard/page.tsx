@@ -21,18 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-
-interface Order {
-  order_id: string;
-  status: string;
-  created_at: string;
-  links_count: number;
-  tracking_id: string | null;
-  payment_status: string;
-  payee_name: string;
-  retry_count: number;
-  expiration_time: string;
-}
+import { getPendingPaymentOrders, type Order } from "@/app/actions/orders";
 
 const updateOrderStatus = (orderId: string, newStatus: string) => {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
@@ -66,11 +55,6 @@ const getAllOrdersFromLocalStorage = (): Order[] => {
   return JSON.parse(localStorage.getItem("orders") || "[]");
 };
 
-interface OrdersResponse {
-  orders: Order[];
-  count: number;
-}
-
 interface PaymentConfirmation {
   amount: number;
   status: string;
@@ -91,14 +75,7 @@ export default function Dashboard() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders/pending-payment`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch orders");
-      }
-      const data: OrdersResponse = await response.json();
-
+      const data = await getPendingPaymentOrders();
       const localOrders = getAllOrdersFromLocalStorage();
 
       const mergedOrders = [...data.orders];
