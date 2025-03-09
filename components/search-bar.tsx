@@ -13,8 +13,8 @@ export function SearchBar() {
 
   const exampleQueries = [
     "quiero almorzar algo liviano por menos de 10.000",
-    "quiero fideos con salsa de hongos",
-    "ensalada con carne",
+    "asado para 3 con achuras",
+    "quiero comer algo con proteina, soy vegetariano",
     "me quiero reventar con bajon dulce",
     "algo con carne pero sin gluten",
   ];

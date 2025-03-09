@@ -53,6 +53,7 @@ export interface Product {
   id: string;
   name: string;
   description?: string;
+  url: string;
   price: number;
   image?: string;
   category?: string;

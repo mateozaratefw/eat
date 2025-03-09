@@ -4,7 +4,7 @@ import type { Product } from "@/types/product";
 
 export async function searchProducts(query: string): Promise<Product[]> {
   try {
-    const response = await fetch("http://127.0.0.1:3000/products/search", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_WEB_API_URL}/products/search`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

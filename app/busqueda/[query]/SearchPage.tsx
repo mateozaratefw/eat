@@ -47,15 +47,18 @@ export default function SearchResults({
       setLoadingStoreProducts(true);
       setStoreError(null);
 
-      const response = await fetch("http://localhost:3000/products/store", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          store_url: storeUrl,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_WEB_API_URL}/products/store`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            store_url: storeUrl,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Error al obtener productos de la tienda");

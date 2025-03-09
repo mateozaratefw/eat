@@ -26,7 +26,13 @@ export default function SearchPage({
   const { addToCart, removeFromCart, isInCart, getCartItemQuantity } =
     useCart();
 
-  const [products] = useState<Product[]>(initialProducts);
+  const [products] = useState<Product[]>(
+    initialProducts.filter(
+      (product) =>
+        product.image !==
+        "https://images.rappi.com.ar/products/?d=300x300&e=webp&q=1"
+    )
+  );
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
     null
   );
@@ -42,15 +48,18 @@ export default function SearchPage({
       setLoadingStoreProducts(true);
       setStoreError(null);
 
-      const response = await fetch("http://localhost:3000/products/store", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          store_url: storeUrl,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_WEB_API_URL}/products/store`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            store_url: storeUrl,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Error al obtener productos de la tienda");
@@ -60,6 +69,7 @@ export default function SearchPage({
       const filteredStoreProducts = data.products.filter(
         (p) => p.id !== selectedProductId
       );
+      console.log("filteredStoreProducts", JSON.stringify(filteredStoreProducts, null, 4));
       setStoreProducts(filteredStoreProducts);
     } catch (err) {
       setStoreError(
@@ -177,11 +187,37 @@ export default function SearchPage({
                   {isInCart(selectedProduct.id) && (
                     <div className="mt-2 flex justify-center">
                       <div className="flex items-center space-x-2 bg-primary/10 p-2 rounded-md">
+                        <button
+                          className="text-sm text-primary hover:text-primary/80 px-2 py-1"
+                          onClick={() => {
+                            const currentQuantity = getCartItemQuantity(
+                              selectedProduct.id
+                            );
+                            if (currentQuantity > 1) {
+                              addToCart(selectedProduct, currentQuantity - 1);
+                            } else {
+                              removeFromCart(selectedProduct.id);
+                            }
+                          }}
+                        >
+                          -
+                        </button>
                         <span className="text-sm font-medium">
-                          En carrito: {getCartItemQuantity(selectedProduct.id)}
+                          {getCartItemQuantity(selectedProduct.id)}
                         </span>
                         <button
-                          className="text-sm text-primary hover:text-primary/80"
+                          className="text-sm text-primary hover:text-primary/80 px-2 py-1"
+                          onClick={() => {
+                            const currentQuantity = getCartItemQuantity(
+                              selectedProduct.id
+                            );
+                            addToCart(selectedProduct, currentQuantity + 1);
+                          }}
+                        >
+                          +
+                        </button>
+                        <button
+                          className="text-sm text-primary hover:text-primary/80 ml-2"
                           onClick={() => removeFromCart(selectedProduct.id)}
                         >
                           Quitar

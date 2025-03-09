@@ -34,6 +34,38 @@ interface Order {
   expiration_time: string;
 }
 
+const updateOrderStatus = (orderId: string, newStatus: string) => {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const updatedOrders = orders.map((order: Order) =>
+    order.order_id === orderId ? { ...order, status: newStatus } : order
+  );
+  localStorage.setItem("orders", JSON.stringify(updatedOrders));
+};
+
+const saveOrderToLocalStorage = (order: Order) => {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const existingOrderIndex = orders.findIndex(
+    (o: Order) => o.order_id === order.order_id
+  );
+
+  if (existingOrderIndex >= 0) {
+    orders[existingOrderIndex] = order;
+  } else {
+    orders.push(order);
+  }
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+};
+
+const getOrderFromLocalStorage = (orderId: string): Order | null => {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  return orders.find((order: Order) => order.order_id === orderId) || null;
+};
+
+const getAllOrdersFromLocalStorage = (): Order[] => {
+  return JSON.parse(localStorage.getItem("orders") || "[]");
+};
+
 interface OrdersResponse {
   orders: Order[];
   count: number;
@@ -53,21 +85,45 @@ export default function Dashboard() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [paymentDetails, setPaymentDetails] = useState<PaymentConfirmation>({
     amount: 0,
-    status: "completed",
+    status: "Completed",
     payer_name: "",
   });
 
   const fetchOrders = async () => {
     try {
       const response = await fetch(
-        "http://172.20.5.3:8000/orders/pending-payment"
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/pending-payment`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch orders");
       }
       const data: OrdersResponse = await response.json();
-      setOrders(data.orders);
+
+      const localOrders = getAllOrdersFromLocalStorage();
+
+      const mergedOrders = [...data.orders];
+
+      localOrders.forEach((localOrder) => {
+        const apiOrderIndex = mergedOrders.findIndex(
+          (apiOrder) => apiOrder.order_id === localOrder.order_id
+        );
+
+        if (apiOrderIndex >= 0) {
+          mergedOrders[apiOrderIndex] = localOrder;
+        } else {
+          mergedOrders.push(localOrder);
+        }
+      });
+
+      mergedOrders.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setOrders(mergedOrders);
     } catch (err) {
+      const localOrders = getAllOrdersFromLocalStorage();
+      setOrders(localOrders);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
@@ -81,9 +137,29 @@ export default function Dashboard() {
   const handleConfirmPayment = async () => {
     if (!selectedOrderId) return;
 
+    const currentOrder = orders.find(
+      (order) => order.order_id === selectedOrderId
+    );
+
+    if (!currentOrder) return;
+
+    if (currentOrder.payment_status === "paid") {
+      const updatedOrder = {
+        ...currentOrder,
+        status: "Completed",
+      };
+
+      saveOrderToLocalStorage(updatedOrder);
+      updateOrderStatus(selectedOrderId, "Completed");
+      toast.success("Order status updated successfully");
+      setIsModalOpen(false);
+      fetchOrders(); // Refresh the orders list
+      return;
+    }
+
     try {
       const response = await fetch(
-        `http://172.20.5.3:8000/orders/${selectedOrderId}/confirm-payment`,
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/${selectedOrderId}/confirm-payment`,
         {
           method: "POST",
           headers: {
@@ -97,6 +173,14 @@ export default function Dashboard() {
       if (!response.ok) {
         throw new Error("Failed to confirm payment");
       }
+
+      const updatedOrder = {
+        ...currentOrder,
+        status: "In progress",
+        payment_status: "paid",
+      };
+      saveOrderToLocalStorage(updatedOrder);
+      updateOrderStatus(selectedOrderId, "In progress");
 
       toast.success("Payment confirmed successfully");
       setIsModalOpen(false);

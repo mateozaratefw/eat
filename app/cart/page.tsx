@@ -39,27 +39,52 @@ export default function CartPage() {
     try {
       const orderId = uuidv4();
 
-      console.log(JSON.stringify(cartItems, null, 2));
 
       const links = cartItems.flatMap((item) =>
         Array(item.quantity).fill(item.url)
       );
-      const response = await fetch("http://172.20.5.3:8000/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          order_id: orderId,
-          links: links,
-          payee_name: name,
-        }),
-      });
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            order_id: orderId,
+            links: links,
+            payee_name: name,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Error al procesar la orden");
       }
 
+      const orderInfo = {
+        order_id: orderId,
+        status: "In progress",
+        created_at: new Date().toISOString(),
+        links_count: links.length,
+        tracking_id: null,
+        payment_status: "In progress",
+        payee_name: name,
+        retry_count: 0,
+        expiration_time: new Date(
+          Date.now() + 24 * 60 * 60 * 1000
+        ).toISOString(), // 24 hours from now
+        _items: cartItems,
+        _total: totalAmount + totalDeliveryFee,
+      };
+
+      // Get existing orders or initialize empty array
+      const existingOrders = JSON.parse(localStorage.getItem("orders") || "[]");
+      existingOrders.push(orderInfo);
+      localStorage.setItem("orders", JSON.stringify(existingOrders));
+
+      clearCart(); // Clear the cart after successful order
       router.push("/");
     } catch (error) {
       console.error("Error:", error);
@@ -222,9 +247,33 @@ export default function CartPage() {
                 </div>
               </div>
               <div className="mt-6 space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-2 text-lg">
+                    💳 Instrucciones de Pago - Total: $
+                    {(totalAmount + totalDeliveryFee).toLocaleString("es-AR")}
+                  </h4>
+                  <div className="space-y-3">
+                    <p className="text-blue-800">
+                      1. Envía el monto total mediante transferencia a:
+                    </p>
+                    <p className="font-mono bg-white p-3 rounded border border-blue-200 text-blue-900 select-all text-center text-lg">
+                      mateo.zarate.lemon
+                    </p>
+                    <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mt-2">
+                      <p className="text-yellow-800 font-medium">
+                        ⚠️ IMPORTANTE: El nombre que ingreses abajo DEBE
+                        coincidir exactamente con el nombre usado en tu
+                        transferencia
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-medium">
-                    Nombre
+                    Nombre <span className="text-red-500">*</span>
+                    <span className="block text-sm text-muted-foreground">
+                      Debe coincidir con el nombre usado en la transferencia
+                    </span>
                   </label>
                   <Input
                     id="name"
